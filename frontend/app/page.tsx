@@ -14,7 +14,7 @@ import { getErrorMessage } from "@/utils/errorUtils"
 import { Plus } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useDebounceValue } from "usehooks-ts"
 import SearchBar from "../components/SearchBar"
 
@@ -27,8 +27,6 @@ export default function Page() {
   const [modalOpen, setModalOpen] = useState(false)
   const [snippetToDelete, setSnippetToDelete] = useState<string | null>(null)
 
-  const [debouncedQuery] = useDebounceValue(query, 300)
-
   const computedQuery = useMemo((): SnippetsQueryParams => {
     const result: SnippetsQueryParams = {}
 
@@ -39,8 +37,8 @@ export default function Page() {
       }
     }
 
-    if (debouncedQuery) {
-      result.q = debouncedQuery
+    if (query) {
+      result.q = query
     }
 
     if (tag) {
@@ -48,13 +46,15 @@ export default function Page() {
     }
 
     return result
-  }, [page, debouncedQuery, tag])
+  }, [page, query, tag])
+
+  const [debouncedQuery] = useDebounceValue(computedQuery, 300)
 
   const {
     data: snippets,
     error,
     isLoading,
-  } = useGetSnippetsQuery(computedQuery)
+  } = useGetSnippetsQuery(debouncedQuery)
   const { data: tagsData } = useGetTagsQuery()
   const [deleteSnippet] = useDeleteSnippetMutation()
 
@@ -89,81 +89,57 @@ export default function Page() {
   }
 
   const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString())
-
-    if (newPage > 1) {
-      params.set("page", newPage.toString())
-      setPage(newPage.toString())
-    } else {
-      params.delete("page")
-      setPage("")
-    }
-
-    const newUrl = params.toString()
-      ? `?${params.toString()}`
-      : window.location.pathname
-    window.history.pushState(null, "", newUrl)
+    setPage(newPage > 1 ? newPage.toString() : "")
   }
 
   const handleSearch = () => {
-    const params = new URLSearchParams(searchParams.toString())
-
-    if (query) {
-      params.set("q", query)
-    } else {
-      params.delete("q")
-    }
-
-    if (tag) {
-      params.set("tag", tag)
-    } else {
-      params.delete("tag")
-    }
-
-    params.delete("page")
-    setPage("")
-
-    const newUrl = params.toString()
-      ? `?${params.toString()}`
-      : window.location.pathname
-    window.history.pushState(null, "", newUrl)
+    // URL updates are now handled by useEffect on debouncedQuery
   }
 
   const handleClear = () => {
     setQuery("")
     setTag("")
     setPage("")
-
-    const params = new URLSearchParams(searchParams.toString())
-    params.delete("q")
-    params.delete("tag")
-    params.delete("page")
-
-    const newUrl = params.toString()
-      ? `?${params.toString()}`
-      : window.location.pathname
-    window.history.pushState(null, "", newUrl)
   }
 
   const handleTagChange = (newTag: string) => {
     setTag(newTag)
+    setPage("")
+  }
 
-    const params = new URLSearchParams(searchParams.toString())
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
 
-    if (newTag) {
-      params.set("tag", newTag)
+    // Update query parameter
+    if (debouncedQuery.q) {
+      params.set("q", debouncedQuery.q)
+    } else {
+      params.delete("q")
+    }
+
+    // Update tag parameter
+    if (debouncedQuery.tag) {
+      params.set("tag", debouncedQuery.tag)
     } else {
       params.delete("tag")
     }
 
-    params.delete("page")
-    setPage("")
+    // Update page parameter
+    if (debouncedQuery.page) {
+      params.set("page", debouncedQuery.page.toString())
+    } else {
+      params.delete("page")
+    }
 
     const newUrl = params.toString()
       ? `?${params.toString()}`
       : window.location.pathname
-    window.history.pushState(null, "", newUrl)
-  }
+
+    // Only update if URL actually changed
+    if (newUrl !== window.location.pathname + window.location.search) {
+      window.history.pushState(null, "", newUrl)
+    }
+  }, [debouncedQuery])
 
   let content
 
