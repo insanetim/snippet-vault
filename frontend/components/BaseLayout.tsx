@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import React, { PropsWithChildren } from "react"
 
@@ -9,8 +10,14 @@ const BaseLayout: React.FC<PropsWithChildren> = ({ children }) => {
           <div className="flex justify-between items-center h-16">
             <Link
               href="/"
-              className="text-xl font-semibold text-gray-900 hover:text-gray-700"
+              className="flex items-center gap-2 text-xl font-semibold text-gray-900 hover:text-gray-700"
             >
+              <Image
+                src="/vault.png"
+                alt="Snippet Vault"
+                width={40}
+                height={40}
+              />
               Snippet Vault
             </Link>
           </div>

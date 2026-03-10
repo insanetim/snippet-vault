@@ -27,7 +27,7 @@ export default function RootLayout({
         <link
           rel="icon"
           type="image/png"
-          href="/snippet-vault.png"
+          href="/vault.png"
         />
       </head>
       <body
