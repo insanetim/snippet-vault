@@ -35,17 +35,8 @@ export class PaginatedSnippetsResponseDto {
   page: number;
 
   @Expose()
-  limit: number;
-
-  @Expose()
-  totalCount: number;
-
-  @Expose()
   totalPages: number;
 
   @Expose()
-  hasNextPage: boolean;
-
-  @Expose()
-  hasPreviousPage: boolean;
+  totalCount: number;
 }
