@@ -1,8 +1,13 @@
 "use client"
 
-import { useGetSnippetsQuery } from "@/api/snippetsApiSlice"
+import {
+  useDeleteSnippetMutation,
+  useGetSnippetsQuery,
+} from "@/api/snippetsApiSlice"
+import ConfirmationModal from "@/components/ConfirmationModal"
 import SnippetsList from "@/components/SnippetsList"
 import { ErrorAlert, Loading } from "@/components/UI"
+import showToast from "@/services/toast"
 import type { SnippetsQueryParams } from "@/types/snippets"
 import { getErrorMessage } from "@/utils/errorUtils"
 import { Plus } from "lucide-react"
@@ -16,6 +21,8 @@ export default function Page() {
   const [page, setPage] = useState(searchParams.get("page") || "")
   const [query, setQuery] = useState(searchParams.get("q") || "")
   const [tag, setTag] = useState(searchParams.get("tag") || "")
+  const [modalOpen, setModalOpen] = useState(false)
+  const [snippetToDelete, setSnippetToDelete] = useState<string | null>(null)
 
   const computedQuery = useMemo((): SnippetsQueryParams => {
     const result: SnippetsQueryParams = {}
@@ -43,6 +50,54 @@ export default function Page() {
     error,
     isLoading,
   } = useGetSnippetsQuery(computedQuery)
+  const [deleteSnippet] = useDeleteSnippetMutation()
+
+  const handleDeleteClick = (id: string) => {
+    setSnippetToDelete(id)
+    setModalOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!snippetToDelete) return
+
+    try {
+      await deleteSnippet(snippetToDelete).unwrap()
+      showToast.success("Snippet deleted successfully")
+
+      // Check if we need to navigate to previous page
+      if (snippets?.data.length === 1 && snippets.page > 1) {
+        handlePageChange(snippets.page - 1)
+      }
+    } catch (error) {
+      console.error(error)
+      showToast.error("Failed to delete snippet")
+    } finally {
+      setModalOpen(false)
+      setSnippetToDelete(null)
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setModalOpen(false)
+    setSnippetToDelete(null)
+  }
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (newPage > 1) {
+      params.set("page", newPage.toString())
+      setPage(newPage.toString())
+    } else {
+      params.delete("page")
+      setPage("")
+    }
+
+    const newUrl = params.toString()
+      ? `?${params.toString()}`
+      : window.location.pathname
+    window.history.pushState(null, "", newUrl)
+  }
 
   let content
 
@@ -60,7 +115,8 @@ export default function Page() {
         snippets={snippets.data}
         page={snippets.page}
         totalPages={snippets.totalPages}
-        onPageChange={() => {}}
+        onPageChange={handlePageChange}
+        onRemove={handleDeleteClick}
       />
     )
   }
@@ -77,6 +133,16 @@ export default function Page() {
         </Link>
       </div>
       {content}
+      <ConfirmationModal
+        open={modalOpen}
+        title="Delete Snippet"
+        message="Are you sure you want to delete this snippet? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmButtonColor="error"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   )
 }

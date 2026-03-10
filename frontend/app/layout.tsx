@@ -2,6 +2,7 @@ import BaseLayout from "@/components/BaseLayout"
 import Providers from "@/components/Providers"
 import type { Metadata } from "next"
 import { Roboto } from "next/font/google"
+import { Toaster } from "sonner"
 import "./globals.css"
 
 const roboto = Roboto({
@@ -35,6 +36,11 @@ export default function RootLayout({
       >
         <Providers>
           <BaseLayout>{children}</BaseLayout>
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+          />
         </Providers>
       </body>
     </html>
