@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ValidateObjectId } from './decorators/validate-object-id.decorator';
+import { ValidateObjectId } from '../decorators/validate-object-id.decorator';
 import { CreateSnippetDto } from './dto/create-snippet.dto';
 import { UpdateSnippetDto } from './dto/update-snippet.dto';
 import { Snippet } from './schemas/snippet.schema';
