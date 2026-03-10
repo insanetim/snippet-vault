@@ -187,6 +187,7 @@ export default function Page() {
         totalPages={snippets.totalPages}
         onPageChange={handlePageChange}
         onRemove={handleDeleteClick}
+        onTagSelect={handleTagChange}
       />
     )
   }

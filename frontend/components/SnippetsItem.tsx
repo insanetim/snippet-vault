@@ -54,9 +54,12 @@ const SnippetsItem: React.FC<SnippetsItemProps> = ({
             <div className={`badge ${getTypeColor(snippet.type)} badge-sm`}>
               {getTypeIcon(snippet.type)}
             </div>
-            <h2 className="font-semibold text-base truncate">
+            <Link
+              href={`/${snippet.id}`}
+              className="font-semibold text-base truncate hover:text-primary transition-colors"
+            >
               {snippet.title}
-            </h2>
+            </Link>
           </div>
         </div>
 
@@ -72,7 +75,9 @@ const SnippetsItem: React.FC<SnippetsItemProps> = ({
               <button
                 key={index}
                 className="badge badge-outline badge-sm hover:badge-primary transition-colors cursor-pointer"
-                onClick={() => onTagSelect?.(tag)}
+                onClick={() => {
+                  onTagSelect?.(tag)
+                }}
               >
                 <Tag className="w-3" />
                 {tag}
@@ -92,7 +97,10 @@ const SnippetsItem: React.FC<SnippetsItemProps> = ({
             <span>{formatDate(snippet.updatedAt)}</span>
           </div>
 
-          <div className="flex gap-1">
+          <div
+            className="flex gap-1"
+            onClick={e => e.stopPropagation()}
+          >
             <Link href={`/${snippet.id}/edit`}>
               <button className="btn btn-ghost btn-xs">
                 <Edit className="w-3" />
@@ -101,7 +109,10 @@ const SnippetsItem: React.FC<SnippetsItemProps> = ({
 
             <button
               className="btn btn-ghost btn-error btn-xs"
-              onClick={() => onRemove?.(snippet.id)}
+              onClick={e => {
+                e.stopPropagation()
+                onRemove?.(snippet.id)
+              }}
             >
               <Trash2 className="w-3" />
             </button>
