@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -12,7 +13,13 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { CreateSnippetDto, UpdateSnippetDto } from './dto';
+import { plainToInstance } from 'class-transformer';
+import {
+  CreateSnippetDto,
+  PaginatedSnippetsResponseDto,
+  SnippetResponseDto,
+  UpdateSnippetDto,
+} from './dto';
 import { SnippetsService } from './snippets.service';
 
 @Controller('snippets')
@@ -34,9 +41,16 @@ export class SnippetsController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createSnippetDto: CreateSnippetDto) {
     const snippet = await this.snippetsService.create(createSnippetDto);
+
+    const plainSnippet = snippet.toObject ? snippet.toObject() : snippet;
+
+    const dto = plainToInstance(SnippetResponseDto, plainSnippet, {
+      excludeExtraneousValues: true,
+    });
+
     return {
       success: true,
-      data: snippet,
+      data: dto,
       message: 'Snippet created successfully',
     };
   }
@@ -50,9 +64,30 @@ export class SnippetsController {
     const pageNum = page ? parseInt(page, 10) : 1;
     const result = await this.snippetsService.findAll(pageNum, q, tag);
 
+    const plainData = result.data.map((item) =>
+      item.toObject ? item.toObject() : item,
+    );
+
+    const dtoData = plainToInstance(SnippetResponseDto, plainData, {
+      excludeExtraneousValues: true,
+    });
+
+    const paginatedDto = plainToInstance(
+      PaginatedSnippetsResponseDto,
+      {
+        data: dtoData,
+        page: result.page,
+        totalPages: result.totalPages,
+        totalCount: result.totalCount,
+      },
+      {
+        excludeExtraneousValues: true,
+      },
+    );
+
     return {
       success: true,
-      ...result,
+      ...paginatedDto,
     };
   }
 
@@ -68,9 +103,20 @@ export class SnippetsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const snippet = await this.snippetsService.findOne(id);
+
+    if (!snippet) {
+      throw new NotFoundException('Snippet not found');
+    }
+
+    const plainSnippet = snippet.toObject ? snippet.toObject() : snippet;
+
+    const dto = plainToInstance(SnippetResponseDto, plainSnippet, {
+      excludeExtraneousValues: true,
+    });
+
     return {
       success: true,
-      data: snippet,
+      data: dto,
     };
   }
 
@@ -80,9 +126,16 @@ export class SnippetsController {
     @Body() updateSnippetDto: UpdateSnippetDto,
   ) {
     const snippet = await this.snippetsService.update(id, updateSnippetDto);
+
+    const plainSnippet = snippet.toObject ? snippet.toObject() : snippet;
+
+    const dto = plainToInstance(SnippetResponseDto, plainSnippet, {
+      excludeExtraneousValues: true,
+    });
+
     return {
       success: true,
-      data: snippet,
+      data: dto,
       message: 'Snippet updated successfully',
     };
   }

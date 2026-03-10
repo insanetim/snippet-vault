@@ -8,17 +8,17 @@ import { Model } from 'mongoose';
 import { ValidateObjectId } from '../decorators/validate-object-id.decorator';
 import { CreateSnippetDto } from './dto/create-snippet.dto';
 import { UpdateSnippetDto } from './dto/update-snippet.dto';
-import { Snippet } from './schemas/snippet.schema';
+import { Snippet, SnippetDocument } from './schemas/snippet.schema';
 
 @Injectable()
 export class SnippetsService {
   private readonly DEFAULT_LIMIT = 10;
 
   constructor(
-    @InjectModel(Snippet.name) private snippetModel: Model<Snippet>,
+    @InjectModel(Snippet.name) private snippetModel: Model<SnippetDocument>,
   ) {}
 
-  async create(createSnippetDto: CreateSnippetDto): Promise<Snippet> {
+  async create(createSnippetDto: CreateSnippetDto): Promise<SnippetDocument> {
     try {
       const created = new this.snippetModel({
         ...createSnippetDto,
@@ -75,7 +75,7 @@ export class SnippetsService {
   }
 
   @ValidateObjectId
-  async findOne(id: string): Promise<Snippet> {
+  async findOne(id: string): Promise<SnippetDocument | null> {
     const snippet = await this.snippetModel.findById(id).select('-__v').exec();
 
     if (!snippet) {
@@ -89,7 +89,7 @@ export class SnippetsService {
   async update(
     id: string,
     updateSnippetDto: UpdateSnippetDto,
-  ): Promise<Snippet> {
+  ): Promise<SnippetDocument> {
     if (updateSnippetDto.tags) {
       updateSnippetDto.tags = updateSnippetDto.tags.map((tag) =>
         tag.toLowerCase().trim(),

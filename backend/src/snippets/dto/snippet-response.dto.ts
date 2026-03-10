@@ -2,7 +2,11 @@ import { Expose, Transform, Type } from 'class-transformer';
 
 export class SnippetResponseDto {
   @Expose()
-  @Transform(({ obj }) => obj._id?.toString() || obj.id)
+  @Transform(({ obj }) => {
+    const id = obj._id?.toString() || obj.id;
+    delete obj._id;
+    return id;
+  })
   id: string;
 
   @Expose()
