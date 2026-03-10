@@ -3,6 +3,7 @@
 import {
   useDeleteSnippetMutation,
   useGetSnippetsQuery,
+  useGetTagsQuery,
 } from "@/api/snippetsApiSlice"
 import ConfirmationModal from "@/components/ConfirmationModal"
 import SnippetsList from "@/components/SnippetsList"
@@ -14,6 +15,8 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useMemo, useState } from "react"
+import { useDebounceValue } from "usehooks-ts"
+import SearchBar from "../components/SearchBar"
 
 export default function Page() {
   const searchParams = useSearchParams()
@@ -23,6 +26,8 @@ export default function Page() {
   const [tag, setTag] = useState(searchParams.get("tag") || "")
   const [modalOpen, setModalOpen] = useState(false)
   const [snippetToDelete, setSnippetToDelete] = useState<string | null>(null)
+
+  const [debouncedQuery] = useDebounceValue(query, 300)
 
   const computedQuery = useMemo((): SnippetsQueryParams => {
     const result: SnippetsQueryParams = {}
@@ -34,8 +39,8 @@ export default function Page() {
       }
     }
 
-    if (query) {
-      result.q = query
+    if (debouncedQuery) {
+      result.q = debouncedQuery
     }
 
     if (tag) {
@@ -43,13 +48,14 @@ export default function Page() {
     }
 
     return result
-  }, [page, query, tag])
+  }, [page, debouncedQuery, tag])
 
   const {
     data: snippets,
     error,
     isLoading,
   } = useGetSnippetsQuery(computedQuery)
+  const { data: tagsData } = useGetTagsQuery()
   const [deleteSnippet] = useDeleteSnippetMutation()
 
   const handleDeleteClick = (id: string) => {
@@ -99,6 +105,66 @@ export default function Page() {
     window.history.pushState(null, "", newUrl)
   }
 
+  const handleSearch = () => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (query) {
+      params.set("q", query)
+    } else {
+      params.delete("q")
+    }
+
+    if (tag) {
+      params.set("tag", tag)
+    } else {
+      params.delete("tag")
+    }
+
+    params.delete("page")
+    setPage("")
+
+    const newUrl = params.toString()
+      ? `?${params.toString()}`
+      : window.location.pathname
+    window.history.pushState(null, "", newUrl)
+  }
+
+  const handleClear = () => {
+    setQuery("")
+    setTag("")
+    setPage("")
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("q")
+    params.delete("tag")
+    params.delete("page")
+
+    const newUrl = params.toString()
+      ? `?${params.toString()}`
+      : window.location.pathname
+    window.history.pushState(null, "", newUrl)
+  }
+
+  const handleTagChange = (newTag: string) => {
+    setTag(newTag)
+
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (newTag) {
+      params.set("tag", newTag)
+    } else {
+      params.delete("tag")
+    }
+
+    params.delete("page")
+    setPage("")
+
+    const newUrl = params.toString()
+      ? `?${params.toString()}`
+      : window.location.pathname
+    window.history.pushState(null, "", newUrl)
+  }
+
   let content
 
   if (isLoading) {
@@ -107,7 +173,11 @@ export default function Page() {
     content = <ErrorAlert errorMessage={getErrorMessage(error)} />
   } else if (snippets?.data.length === 0) {
     content = (
-      <p className="text-gray-500">No forms found. Create your first form!</p>
+      <p className="text-gray-500">
+        {computedQuery.q || computedQuery.tag
+          ? "No results found"
+          : "No snippets found"}
+      </p>
     )
   } else if (snippets?.data && snippets?.data.length > 0) {
     content = (
@@ -132,6 +202,15 @@ export default function Page() {
           </button>
         </Link>
       </div>
+      <SearchBar
+        query={query}
+        tag={tag}
+        availableTags={tagsData?.data || []}
+        onQueryChange={setQuery}
+        onTagChange={handleTagChange}
+        onClear={handleClear}
+        onSearch={handleSearch}
+      />
       {content}
       <ConfirmationModal
         open={modalOpen}

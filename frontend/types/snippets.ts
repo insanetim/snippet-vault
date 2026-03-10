@@ -14,19 +14,20 @@ export type CreateSnippet = Pick<Snippet, "title" | "content" | "tags" | "type">
 
 export type UpdateSnippet = Partial<CreateSnippet>
 
-export interface PaginatedResponse<T> {
+export type PaginatedResponse<T> = SuccessResponse<T> & {
   data: T[]
   page: number
   totalPages: number
   totalCount: number
 }
 
-export type SuccessResponse<T> = T & {
+export type SuccessResponse<T> = {
+  data: T
   success: true
   message?: string
 }
 
-export type PaginatedSnippets = SuccessResponse<PaginatedResponse<Snippet>>
+export type PaginatedSnippets = PaginatedResponse<Snippet>
 
 export interface SnippetsQueryParams {
   page?: number

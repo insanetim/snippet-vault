@@ -40,7 +40,13 @@ export class SnippetsService {
     const filter: any = {};
 
     if (q && q.trim()) {
-      filter.$text = { $search: q.trim() };
+      const searchTerm = q.trim();
+      filter.$or = [
+        { title: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } },
+        { code: { $regex: searchTerm, $options: 'i' } },
+        { tags: { $regex: searchTerm, $options: 'i' } },
+      ];
     }
 
     if (tag && tag.trim()) {
@@ -53,9 +59,7 @@ export class SnippetsService {
           .find(filter)
           .skip(skip)
           .limit(limit)
-          .sort({
-            ...(q ? { score: { $meta: 'textScore' } } : { createdAt: -1 }),
-          })
+          .sort({ createdAt: -1 })
           .select('-__v')
           .exec(),
         this.snippetModel.countDocuments(filter),
