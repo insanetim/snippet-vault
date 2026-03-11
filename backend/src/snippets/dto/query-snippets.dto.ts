@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { SnippetType } from '../enums/snippet-type.enum';
 
 export class QuerySnippetsDto {
   @IsOptional()
@@ -17,4 +18,8 @@ export class QuerySnippetsDto {
   @IsString({ message: 'Tag must be a string' })
   @Type(() => String)
   tag?: string;
+
+  @IsOptional()
+  @IsEnum(SnippetType, { message: 'Type must be a valid snippet type' })
+  type?: SnippetType;
 }

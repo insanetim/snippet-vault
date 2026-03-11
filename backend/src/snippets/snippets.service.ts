@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { ValidateObjectId } from '../decorators/validate-object-id.decorator';
 import { CreateSnippetDto } from './dto/create-snippet.dto';
 import { UpdateSnippetDto } from './dto/update-snippet.dto';
+import { SnippetType } from './enums/snippet-type.enum';
 import { Snippet, SnippetDocument } from './schemas/snippet.schema';
 
 @Injectable()
@@ -33,7 +34,12 @@ export class SnippetsService {
     }
   }
 
-  async findAll(page: number = 1, q?: string, tag?: string) {
+  async findAll(
+    page: number = 1,
+    q?: string,
+    tag?: string,
+    type?: SnippetType,
+  ) {
     const limit = this.DEFAULT_LIMIT;
     const skip = (page - 1) * limit;
 
@@ -53,6 +59,10 @@ export class SnippetsService {
       filter.tags = tag.toLowerCase().trim();
     }
 
+    if (type) {
+      filter.type = type;
+    }
+
     try {
       const [data, totalCount] = await Promise.all([
         this.snippetModel
@@ -60,7 +70,6 @@ export class SnippetsService {
           .skip(skip)
           .limit(limit)
           .sort({ createdAt: -1 })
-          .select('-__v')
           .exec(),
         this.snippetModel.countDocuments(filter),
       ]);

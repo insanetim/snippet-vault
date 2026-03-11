@@ -17,6 +17,7 @@ import { plainToInstance } from 'class-transformer';
 import {
   CreateSnippetDto,
   PaginatedSnippetsResponseDto,
+  QuerySnippetsDto,
   SnippetResponseDto,
   UpdateSnippetDto,
 } from './dto';
@@ -56,13 +57,13 @@ export class SnippetsController {
   }
 
   @Get()
-  async findAll(
-    @Query('page') page?: string,
-    @Query('q') q?: string,
-    @Query('tag') tag?: string,
-  ) {
-    const pageNum = page ? parseInt(page, 10) : 1;
-    const result = await this.snippetsService.findAll(pageNum, q, tag);
+  async findAll(@Query() query: QuerySnippetsDto) {
+    const result = await this.snippetsService.findAll(
+      query.page,
+      query.q,
+      query.tag,
+      query.type,
+    );
 
     const plainData = result.data.map((item) =>
       item.toObject ? item.toObject() : item,
