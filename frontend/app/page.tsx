@@ -60,8 +60,8 @@ export default function Page() {
     content = (
       <p className="text-gray-500">
         {debouncedQuery.q || debouncedQuery.tag || debouncedQuery.type
-          ? "No results found"
-          : "No snippets found"}
+          ? "No results found, try to change filters."
+          : "No snippets found, create a new one!"}
       </p>
     )
   } else if (snippets?.data && snippets?.data.length > 0) {
