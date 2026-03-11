@@ -1,4 +1,4 @@
-interface ConfirmationModalProps {
+export interface ConfirmationModalProps {
   open: boolean
   title?: string
   message: string

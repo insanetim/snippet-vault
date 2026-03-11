@@ -4,7 +4,7 @@ import {
   useDeleteSnippetMutation,
   useGetSnippetQuery,
 } from "@/api/snippetsApiSlice"
-import ConfirmationModal from "@/components/ConfirmationModal"
+import ActionWithConfirm from "@/components/ActionWithConfirm"
 import { ErrorAlert, Loading } from "@/components/UI"
 import { useSnippetType } from "@/hooks/useSnippetType"
 import showToast from "@/services/toast"
@@ -13,13 +13,10 @@ import { getErrorMessage } from "@/utils/errorUtils"
 import { ArrowLeft, Calendar, Edit, Tag, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { useState } from "react"
 
 export default function Page() {
   const params = useParams()
   const router = useRouter()
-  const [modalOpen, setModalOpen] = useState(false)
-  const [snippetToDelete, setSnippetToDelete] = useState<string | null>(null)
 
   const {
     data: snippet,
@@ -30,30 +27,15 @@ export default function Page() {
 
   const { getTypeIcon, getTypeColor } = useSnippetType(snippet?.data.type)
 
-  const handleDeleteClick = (id: string) => {
-    setSnippetToDelete(id)
-    setModalOpen(true)
-  }
-
-  const handleConfirmDelete = async () => {
-    if (!snippetToDelete) return
-
+  const handleDelete = async () => {
     try {
-      await deleteSnippet(snippetToDelete).unwrap()
+      await deleteSnippet(snippet!.data.id).unwrap()
       showToast.success("Snippet deleted successfully")
       router.push("/")
     } catch (error) {
       console.error(error)
       showToast.error("Failed to delete snippet")
-    } finally {
-      setModalOpen(false)
-      setSnippetToDelete(null)
     }
-  }
-
-  const handleCancelDelete = () => {
-    setModalOpen(false)
-    setSnippetToDelete(null)
   }
 
   if (isLoading) {
@@ -94,13 +76,22 @@ export default function Page() {
               Edit
             </button>
           </Link>
-          <button
-            className="btn btn-error"
-            onClick={() => handleDeleteClick(snippet.data.id)}
+          <ActionWithConfirm
+            confirmModalProps={{
+              title: "Delete Snippet",
+              message:
+                "Are you sure you want to delete this snippet? This action cannot be undone.",
+              confirmText: "Delete",
+              cancelText: "Cancel",
+              confirmButtonColor: "error",
+            }}
+            onConfirm={handleDelete}
           >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+            <button className="btn btn-error">
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          </ActionWithConfirm>
         </div>
       </div>
 
@@ -155,16 +146,6 @@ export default function Page() {
           </div>
         </div>
       </div>
-      <ConfirmationModal
-        open={modalOpen}
-        title="Delete Snippet"
-        message="Are you sure you want to delete this snippet? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmButtonColor="error"
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-      />
     </div>
   )
 }

@@ -5,7 +5,6 @@ import {
   useGetSnippetsQuery,
   useGetTagsQuery,
 } from "@/api/snippetsApiSlice"
-import ConfirmationModal from "@/components/ConfirmationModal"
 import SnippetsList from "@/components/SnippetsList"
 import { ErrorAlert, Loading } from "@/components/UI"
 import { useSnippetQueryParams } from "@/hooks/useSnippetQueryParams"
@@ -13,7 +12,6 @@ import showToast from "@/services/toast"
 import { getErrorMessage } from "@/utils/errorUtils"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
 import SearchBar from "../components/SearchBar"
 
 export default function Page() {
@@ -29,9 +27,6 @@ export default function Page() {
     handleClear,
   } = useSnippetQueryParams()
 
-  const [modalOpen, setModalOpen] = useState(false)
-  const [snippetToDelete, setSnippetToDelete] = useState<string | null>(null)
-
   const {
     data: snippets,
     error,
@@ -40,16 +35,9 @@ export default function Page() {
   const { data: tagsData } = useGetTagsQuery()
   const [deleteSnippet] = useDeleteSnippetMutation()
 
-  const handleDeleteClick = (id: string) => {
-    setSnippetToDelete(id)
-    setModalOpen(true)
-  }
-
-  const handleConfirmDelete = async () => {
-    if (!snippetToDelete) return
-
+  const handleDeleteSnippet = async (id: string) => {
     try {
-      await deleteSnippet(snippetToDelete).unwrap()
+      await deleteSnippet(id).unwrap()
       showToast.success("Snippet deleted successfully")
 
       // Check if we need to navigate to previous page
@@ -59,15 +47,7 @@ export default function Page() {
     } catch (error) {
       console.error(error)
       showToast.error("Failed to delete snippet")
-    } finally {
-      setModalOpen(false)
-      setSnippetToDelete(null)
     }
-  }
-
-  const handleCancelDelete = () => {
-    setModalOpen(false)
-    setSnippetToDelete(null)
   }
 
   let content
@@ -91,7 +71,7 @@ export default function Page() {
         page={snippets.page}
         totalPages={snippets.totalPages}
         onPageChange={handlePageChange}
-        onRemove={handleDeleteClick}
+        onRemove={handleDeleteSnippet}
         onTagSelect={handleTagChange}
       />
     )
@@ -119,16 +99,6 @@ export default function Page() {
         onClear={handleClear}
       />
       {content}
-      <ConfirmationModal
-        open={modalOpen}
-        title="Delete Snippet"
-        message="Are you sure you want to delete this snippet? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmButtonColor="error"
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-      />
     </div>
   )
 }

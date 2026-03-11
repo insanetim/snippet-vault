@@ -3,6 +3,7 @@ import { Snippet } from "@/types/snippets"
 import { formatDate } from "@/utils/dateUtils"
 import { Calendar, Edit, Tag, Trash2 } from "lucide-react"
 import Link from "next/link"
+import ActionWithConfirm from "./ActionWithConfirm"
 
 interface SnippetsItemProps {
   snippet: Snippet
@@ -68,25 +69,28 @@ const SnippetsItem: React.FC<SnippetsItemProps> = ({
             <span>{formatDate(snippet.updatedAt)}</span>
           </div>
 
-          <div
-            className="flex gap-1"
-            onClick={e => e.stopPropagation()}
-          >
+          <div className="flex gap-1">
             <Link href={`/${snippet.id}/edit`}>
               <button className="btn btn-ghost btn-xs">
                 <Edit className="w-3" />
               </button>
             </Link>
 
-            <button
-              className="btn btn-ghost btn-error btn-xs"
-              onClick={e => {
-                e.stopPropagation()
-                onRemove?.(snippet.id)
+            <ActionWithConfirm
+              confirmModalProps={{
+                title: "Delete Snippet",
+                message:
+                  "Are you sure you want to delete this snippet? This action cannot be undone.",
+                confirmText: "Delete",
+                cancelText: "Cancel",
+                confirmButtonColor: "error",
               }}
+              onConfirm={() => onRemove?.(snippet.id)}
             >
-              <Trash2 className="w-3" />
-            </button>
+              <button className="btn btn-ghost btn-error btn-xs">
+                <Trash2 className="w-3" />
+              </button>
+            </ActionWithConfirm>
           </div>
         </div>
       </div>
