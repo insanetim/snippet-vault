@@ -1,5 +1,5 @@
 import { Snippet } from "@/types/snippets"
-import SnippetsItem from "./SnippetsItem"
+import SnippetItem from "./SnippetItem"
 import Pagination from "./UI/Pagination"
 
 interface SnippetsListProps {
@@ -23,7 +23,7 @@ const SnippetsList: React.FC<SnippetsListProps> = ({
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {snippets.map(snippet => (
-          <SnippetsItem
+          <SnippetItem
             key={snippet.id}
             snippet={snippet}
             onRemove={onRemove}

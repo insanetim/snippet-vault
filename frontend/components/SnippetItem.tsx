@@ -5,13 +5,13 @@ import { Calendar, Edit, Tag, Trash2 } from "lucide-react"
 import Link from "next/link"
 import ActionWithConfirm from "./ActionWithConfirm"
 
-interface SnippetsItemProps {
+interface SnippetItemProps {
   snippet: Snippet
   onRemove?: (id: string) => void
   onTagSelect?: (tag: string) => void
 }
 
-const SnippetsItem: React.FC<SnippetsItemProps> = ({
+const SnippetItem: React.FC<SnippetItemProps> = ({
   snippet,
   onRemove,
   onTagSelect,
@@ -98,4 +98,4 @@ const SnippetsItem: React.FC<SnippetsItemProps> = ({
   )
 }
 
-export default SnippetsItem
+export default SnippetItem

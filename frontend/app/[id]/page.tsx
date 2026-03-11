@@ -5,12 +5,13 @@ import {
   useGetSnippetQuery,
 } from "@/api/snippetsApiSlice"
 import ActionWithConfirm from "@/components/ActionWithConfirm"
+import BackButton from "@/components/BackButton"
 import { ErrorAlert, Loading } from "@/components/UI"
 import { useSnippetType } from "@/hooks/useSnippetType"
 import showToast from "@/services/toast"
 import { formatDate } from "@/utils/dateUtils"
 import { getErrorMessage } from "@/utils/errorUtils"
-import { ArrowLeft, Calendar, Edit, Tag, Trash2 } from "lucide-react"
+import { Calendar, Edit, Tag, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 
@@ -56,15 +57,9 @@ export default function Page() {
 
   return (
     <div>
+      <BackButton />
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="btn btn-ghost btn-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </Link>
           <h1 className="text-4xl font-bold text-base-content">
             Snippet Details
           </h1>
