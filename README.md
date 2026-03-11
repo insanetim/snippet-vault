@@ -30,20 +30,20 @@ cd ../frontend && npm run dev
 
 ```bash
 # Get snippets
-curl "http://localhost:3000/snippets"
+curl "http://localhost:3001/snippets"
 
 # Create snippet
-curl -X POST "http://localhost:3000/snippets" \
+curl -X POST "http://localhost:3001/snippets" \
   -H "Content-Type: application/json" \
   -d '{"title":"Test","content":"Example","type":"note","tags":["test"]}'
 
 # Update snippet
-curl -X PATCH "http://localhost:3000/snippets/{id}" \
+curl -X PATCH "http://localhost:3001/snippets/{id}" \
   -H "Content-Type: application/json" \
   -d '{"title":"Updated"}'
 
 # Delete snippet
-curl -X DELETE "http://localhost:3000/snippets/{id}"
+curl -X DELETE "http://localhost:3001/snippets/{id}"
 ```
 
 ## 🏗️ Production
