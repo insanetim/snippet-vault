@@ -10,7 +10,6 @@ interface SearchBarProps {
   onTagChange: (tag: string) => void
   onTypeChange: (type: SnippetType | "") => void
   onClear: () => void
-  onSearch: () => void
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -22,14 +21,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onTagChange,
   onTypeChange,
   onClear,
-  onSearch,
 }) => {
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      onSearch()
-    }
-  }
-
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-8">
       <div className="flex-1">
@@ -38,7 +30,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
           placeholder="Search snippets..."
           value={query}
           onChange={e => onQueryChange(e.target.value)}
-          onKeyPress={handleKeyPress}
           className="input input-bordered w-full"
         />
       </div>

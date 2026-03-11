@@ -8,54 +8,29 @@ import {
 import ConfirmationModal from "@/components/ConfirmationModal"
 import SnippetsList from "@/components/SnippetsList"
 import { ErrorAlert, Loading } from "@/components/UI"
+import { useSnippetQueryParams } from "@/hooks/useSnippetQueryParams"
 import showToast from "@/services/toast"
-import type { SnippetsQueryParams, SnippetType } from "@/types/snippets"
 import { getErrorMessage } from "@/utils/errorUtils"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
-import { useDebounceValue } from "usehooks-ts"
+import { useState } from "react"
 import SearchBar from "../components/SearchBar"
 
 export default function Page() {
-  const searchParams = useSearchParams()
+  const {
+    query,
+    tag,
+    type,
+    debouncedQuery,
+    handlePageChange,
+    handleQueryChange,
+    handleTagChange,
+    handleTypeChange,
+    handleClear,
+  } = useSnippetQueryParams()
 
-  const [page, setPage] = useState(searchParams.get("page") || "")
-  const [query, setQuery] = useState(searchParams.get("q") || "")
-  const [tag, setTag] = useState(searchParams.get("tag") || "")
-  const [type, setType] = useState<SnippetType | string>(
-    searchParams.get("type") || ""
-  )
   const [modalOpen, setModalOpen] = useState(false)
   const [snippetToDelete, setSnippetToDelete] = useState<string | null>(null)
-
-  const computedQuery = useMemo((): SnippetsQueryParams => {
-    const result: SnippetsQueryParams = {}
-
-    if (page) {
-      const pageNum = parseInt(page, 10)
-      if (!isNaN(pageNum)) {
-        result.page = pageNum
-      }
-    }
-
-    if (query) {
-      result.q = query
-    }
-
-    if (tag) {
-      result.tag = tag
-    }
-
-    if (type) {
-      result.type = type as SnippetType
-    }
-
-    return result
-  }, [page, query, tag, type])
-
-  const [debouncedQuery] = useDebounceValue(computedQuery, 300)
 
   const {
     data: snippets,
@@ -95,72 +70,6 @@ export default function Page() {
     setSnippetToDelete(null)
   }
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage > 1 ? newPage.toString() : "")
-  }
-
-  const handleSearch = () => {
-    // URL updates are now handled by useEffect on debouncedQuery
-  }
-
-  const handleClear = () => {
-    setQuery("")
-    setTag("")
-    setType("")
-    setPage("")
-  }
-
-  const handleTagChange = (newTag: string) => {
-    setTag(newTag)
-    setPage("")
-  }
-
-  const handleTypeChange = (newType: string) => {
-    setType(newType)
-    setPage("")
-  }
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-
-    // Update query parameter
-    if (debouncedQuery.q) {
-      params.set("q", debouncedQuery.q)
-    } else {
-      params.delete("q")
-    }
-
-    // Update tag parameter
-    if (debouncedQuery.tag) {
-      params.set("tag", debouncedQuery.tag)
-    } else {
-      params.delete("tag")
-    }
-
-    // Update type parameter
-    if (debouncedQuery.type) {
-      params.set("type", debouncedQuery.type)
-    } else {
-      params.delete("type")
-    }
-
-    // Update page parameter
-    if (debouncedQuery.page) {
-      params.set("page", debouncedQuery.page.toString())
-    } else {
-      params.delete("page")
-    }
-
-    const newUrl = params.toString()
-      ? `?${params.toString()}`
-      : window.location.pathname
-
-    // Only update if URL actually changed
-    if (newUrl !== window.location.pathname + window.location.search) {
-      window.history.pushState(null, "", newUrl)
-    }
-  }, [debouncedQuery])
-
   let content
 
   if (isLoading) {
@@ -170,7 +79,7 @@ export default function Page() {
   } else if (snippets?.data.length === 0) {
     content = (
       <p className="text-gray-500">
-        {computedQuery.q || computedQuery.tag
+        {debouncedQuery.q || debouncedQuery.tag || debouncedQuery.type
           ? "No results found"
           : "No snippets found"}
       </p>
@@ -202,13 +111,12 @@ export default function Page() {
       <SearchBar
         query={query}
         tag={tag}
-        type={type as SnippetType}
+        type={type}
         availableTags={tagsData?.data || []}
-        onQueryChange={setQuery}
+        onQueryChange={handleQueryChange}
         onTagChange={handleTagChange}
         onTypeChange={handleTypeChange}
         onClear={handleClear}
-        onSearch={handleSearch}
       />
       {content}
       <ConfirmationModal
