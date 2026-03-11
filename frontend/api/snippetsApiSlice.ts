@@ -16,9 +16,9 @@ const snippetsApiSlice = api
     endpoints: builder => ({
       // GET /snippets - Get all snippets with pagination and filtering
       getSnippets: builder.query<PaginatedSnippets, SnippetsQueryParams>({
-        query: ({ page, q, tag }) => ({
+        query: ({ page, q, tag, type }) => ({
           url: "snippets",
-          params: { page: page?.toString(), q, tag },
+          params: { page: page?.toString(), q, tag, type },
         }),
         providesTags: ["SnippetsList"],
       }),

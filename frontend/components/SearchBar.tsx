@@ -1,11 +1,14 @@
 import { X } from "lucide-react"
+import { SnippetType } from "../types/snippets"
 
 interface SearchBarProps {
   query: string
   tag: string
+  type: SnippetType | ""
   availableTags: string[]
   onQueryChange: (query: string) => void
   onTagChange: (tag: string) => void
+  onTypeChange: (type: SnippetType | "") => void
   onClear: () => void
   onSearch: () => void
 }
@@ -13,9 +16,11 @@ interface SearchBarProps {
 const SearchBar: React.FC<SearchBarProps> = ({
   query,
   tag,
+  type,
   availableTags,
   onQueryChange,
   onTagChange,
+  onTypeChange,
   onClear,
   onSearch,
 }) => {
@@ -56,7 +61,20 @@ const SearchBar: React.FC<SearchBarProps> = ({
         </select>
       </div>
 
-      {(query || tag) && (
+      <div className="sm:w-48">
+        <select
+          value={type}
+          onChange={e => onTypeChange(e.target.value as SnippetType | "")}
+          className="select select-bordered w-full"
+        >
+          <option value="">All Types</option>
+          <option value="link">Link</option>
+          <option value="note">Note</option>
+          <option value="command">Command</option>
+        </select>
+      </div>
+
+      {(query || tag || type) && (
         <div className="flex gap-2">
           <button
             onClick={onClear}

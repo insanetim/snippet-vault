@@ -9,7 +9,7 @@ import ConfirmationModal from "@/components/ConfirmationModal"
 import SnippetsList from "@/components/SnippetsList"
 import { ErrorAlert, Loading } from "@/components/UI"
 import showToast from "@/services/toast"
-import type { SnippetsQueryParams } from "@/types/snippets"
+import type { SnippetsQueryParams, SnippetType } from "@/types/snippets"
 import { getErrorMessage } from "@/utils/errorUtils"
 import { Plus } from "lucide-react"
 import Link from "next/link"
@@ -24,6 +24,9 @@ export default function Page() {
   const [page, setPage] = useState(searchParams.get("page") || "")
   const [query, setQuery] = useState(searchParams.get("q") || "")
   const [tag, setTag] = useState(searchParams.get("tag") || "")
+  const [type, setType] = useState<SnippetType | string>(
+    searchParams.get("type") || ""
+  )
   const [modalOpen, setModalOpen] = useState(false)
   const [snippetToDelete, setSnippetToDelete] = useState<string | null>(null)
 
@@ -45,8 +48,12 @@ export default function Page() {
       result.tag = tag
     }
 
+    if (type) {
+      result.type = type as SnippetType
+    }
+
     return result
-  }, [page, query, tag])
+  }, [page, query, tag, type])
 
   const [debouncedQuery] = useDebounceValue(computedQuery, 300)
 
@@ -99,11 +106,17 @@ export default function Page() {
   const handleClear = () => {
     setQuery("")
     setTag("")
+    setType("")
     setPage("")
   }
 
   const handleTagChange = (newTag: string) => {
     setTag(newTag)
+    setPage("")
+  }
+
+  const handleTypeChange = (newType: string) => {
+    setType(newType)
     setPage("")
   }
 
@@ -122,6 +135,13 @@ export default function Page() {
       params.set("tag", debouncedQuery.tag)
     } else {
       params.delete("tag")
+    }
+
+    // Update type parameter
+    if (debouncedQuery.type) {
+      params.set("type", debouncedQuery.type)
+    } else {
+      params.delete("type")
     }
 
     // Update page parameter
@@ -182,9 +202,11 @@ export default function Page() {
       <SearchBar
         query={query}
         tag={tag}
+        type={type as SnippetType}
         availableTags={tagsData?.data || []}
         onQueryChange={setQuery}
         onTagChange={handleTagChange}
+        onTypeChange={handleTypeChange}
         onClear={handleClear}
         onSearch={handleSearch}
       />

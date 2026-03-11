@@ -33,4 +33,5 @@ export interface SnippetsQueryParams {
   page?: number
   q?: string
   tag?: string
+  type?: SnippetType
 }
