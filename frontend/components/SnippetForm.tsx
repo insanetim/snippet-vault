@@ -27,7 +27,7 @@ const initialFormData: SnippetFormData = {
 }
 
 interface SnippetFormProps {
-  initialData?: SnippetFormData
+  initialData?: Snippet
   onSubmit?: (data: SnippetFormData) => void
   isEditing?: boolean
   isLoading?: boolean
@@ -45,7 +45,12 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
 }) => {
   const { data: tagsData } = useGetTagsQuery()
 
-  const [formData, setFormData] = useState<SnippetFormData>(initialData)
+  const [formData, setFormData] = useState<SnippetFormData>({
+    title: initialData.title,
+    content: initialData.content,
+    tags: initialData.tags,
+    type: initialData.type,
+  })
   const [hasErrors, setHasErrors] = useState(false)
 
   const validationErrors = useMemo(() => {
@@ -101,7 +106,7 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
     return hasValidationErrors ? null : data
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     const data = validateFormData()
@@ -114,12 +119,7 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
   }
 
   const handleReset = () => {
-    setFormData({
-      title: initialData?.title || "",
-      content: initialData?.content || "",
-      type: initialData?.type || "note",
-      tags: initialData?.tags || [],
-    })
+    setFormData(initialFormData)
   }
 
   return (
