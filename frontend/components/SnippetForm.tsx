@@ -1,9 +1,17 @@
 "use client"
 
 import { useGetTagsQuery } from "@/api/snippetsApiSlice"
+import {
+  formatValidationErrors,
+  validateSnippetForm,
+} from "@/services/validation"
 import { Snippet, SnippetType } from "@/types/snippets"
+import { getErrorMessage } from "@/utils/errorUtils"
 import { getSnippetTypeLabel } from "@/utils/snippetsUtils"
-import React, { useState } from "react"
+import { SerializedError } from "@reduxjs/toolkit"
+import { FetchBaseQueryError } from "@reduxjs/toolkit/query"
+import React, { useMemo, useState } from "react"
+import { ErrorAlert } from "./UI"
 import { MultipleSelect } from "./UI/MultipleSelect"
 
 export type SnippetFormData = Pick<
@@ -22,6 +30,8 @@ interface SnippetFormProps {
   initialData?: SnippetFormData
   onSubmit?: (data: SnippetFormData) => void
   isEditing?: boolean
+  isLoading?: boolean
+  submitError?: FetchBaseQueryError | SerializedError
 }
 
 const snippetTypes: SnippetType[] = ["link", "note", "command"]
@@ -30,10 +40,34 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
   initialData = initialFormData,
   onSubmit,
   isEditing = false,
+  isLoading = false,
+  submitError,
 }) => {
   const { data: tagsData } = useGetTagsQuery()
 
   const [formData, setFormData] = useState<SnippetFormData>(initialData)
+  const [hasErrors, setHasErrors] = useState(false)
+
+  const validationErrors = useMemo(() => {
+    if (!hasErrors) return []
+
+    const data: SnippetFormData = {
+      title: formData.title.trim(),
+      content: formData.content.trim(),
+      tags: formData.tags.filter(tag => tag && tag.length > 0),
+      type: formData.type,
+    }
+
+    return validateSnippetForm(data)
+  }, [hasErrors, formData])
+
+  const errorMessage = useMemo(() => {
+    if (submitError) {
+      return getErrorMessage(submitError)
+    } else if (validationErrors.length > 0) {
+      return formatValidationErrors(validationErrors)
+    }
+  }, [submitError, validationErrors])
 
   // Convert tags data to MultipleSelect format
   const predefinedTags = React.useMemo(() => {
@@ -51,25 +85,31 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
     setFormData(prev => ({ ...prev, [key]: value }))
   }
 
+  const validateFormData = () => {
+    const data: SnippetFormData = {
+      title: formData.title.trim(),
+      content: formData.content.trim(),
+      tags: formData.tags.filter(tag => tag && tag.length > 0),
+      type: formData.type,
+    }
+
+    const validationErrors = validateSnippetForm(data)
+    const hasValidationErrors = validationErrors.length > 0
+
+    setHasErrors(hasValidationErrors)
+
+    return hasValidationErrors ? null : data
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Basic validation
-    if (!formData.title.trim() || !formData.content.trim()) {
-      alert("Title and content are required!")
-      return
-    }
+    const data = validateFormData()
 
-    const submitData = {
-      ...formData,
-      title: formData.title.trim(),
-      content: formData.content.trim(),
-    }
-
-    console.log("Snippet Form Data:", submitData)
+    if (!data) return
 
     if (onSubmit) {
-      onSubmit(submitData)
+      onSubmit(data)
     }
   }
 
@@ -90,6 +130,12 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
             {isEditing ? "Edit Snippet" : "Create New Snippet"}
           </h2>
 
+          {errorMessage && (
+            <div className="mb-4">
+              <ErrorAlert errorMessage={errorMessage} />
+            </div>
+          )}
+
           <form
             onSubmit={handleSubmit}
             className="space-y-6"
@@ -99,7 +145,7 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
               <legend className="fieldset-legend">Title*</legend>
               <input
                 type="text"
-                className="input w-full"
+                className={`input w-full ${validationErrors.some(error => error.field === "title") ? "input-error" : ""}`}
                 placeholder="Enter snippet title..."
                 value={formData.title}
                 onChange={e => updateFormData("title", e.target.value)}
@@ -110,7 +156,7 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
             <fieldset className="fieldset">
               <legend className="fieldset-legend">Content*</legend>
               <textarea
-                className="textarea h-32 w-full font-mono text-sm"
+                className={`textarea h-32 w-full font-mono text-sm ${validationErrors.some(error => error.field === "content") ? "textarea-error" : ""}`}
                 placeholder="Enter your content here..."
                 value={formData.content}
                 onChange={e => updateFormData("content", e.target.value)}
@@ -121,7 +167,7 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
             <fieldset className="fieldset">
               <legend className="fieldset-legend">Type*</legend>
               <select
-                className="select w-full"
+                className={`select w-full ${validationErrors.some(error => error.field === "type") ? "select-error" : ""}`}
                 value={formData.type}
                 onChange={e =>
                   updateFormData("type", e.target.value as SnippetType)
@@ -141,8 +187,10 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
 
             {/* Tags */}
             <div className="form-control">
-              <label className="label">
-                <span className="label-text font-semibold">Tags</span>
+              <label className="label mb-2">
+                <span className="label-text text-xs text-base-content font-semibold">
+                  Tags
+                </span>
               </label>
               <MultipleSelect
                 options={predefinedTags}
@@ -171,6 +219,7 @@ export const SnippetForm: React.FC<SnippetFormProps> = ({
               <button
                 type="submit"
                 className="btn btn-primary"
+                disabled={isLoading}
               >
                 {isEditing ? "Update Snippet" : "Create Snippet"}
               </button>

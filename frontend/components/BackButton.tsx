@@ -7,7 +7,7 @@ interface BackButtonProps {
 }
 
 const BackButton: React.FC<BackButtonProps> = ({
-  title = "Back",
+  title = "Back to Homepage",
   href = "/",
 }) => {
   return (
